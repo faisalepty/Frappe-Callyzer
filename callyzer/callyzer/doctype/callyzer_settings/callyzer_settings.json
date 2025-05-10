@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "company",
+  "is_active",
   "column_break_wpda",
   "domain_api",
   "api_key",
@@ -62,12 +63,18 @@
    "fieldtype": "Data",
    "label": "Call Log",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-10 11:33:14.559697",
+ "modified": "2025-05-10 13:05:25.604463",
  "modified_by": "Administrator",
  "module": "Callyzer",
  "name": "Callyzer Settings",

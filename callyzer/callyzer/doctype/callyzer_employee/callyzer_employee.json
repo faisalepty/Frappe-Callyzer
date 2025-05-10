@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "field:employee_no",
  "creation": "2025-05-10 09:31:38.834524",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -8,6 +9,7 @@
   "employee_code",
   "employee_name",
   "country",
+  "employee_no",
   "column_break_wakj",
   "mobile_no",
   "tags",
@@ -57,8 +59,7 @@
    "fieldname": "mobile_no",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Mobile No",
-   "reqd": 1
+   "label": "Mobile No"
   },
   {
    "fieldname": "tags",
@@ -144,15 +145,22 @@
    "fieldname": "last_call_at",
    "fieldtype": "Datetime",
    "label": "Last Call At"
+  },
+  {
+   "fieldname": "employee_no",
+   "fieldtype": "Data",
+   "label": "Employee no.",
+   "unique": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-10 12:29:42.677008",
+ "modified": "2025-05-10 15:00:54.134133",
  "modified_by": "Administrator",
  "module": "Callyzer",
  "name": "Callyzer Employee",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {

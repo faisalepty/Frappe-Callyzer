@@ -31,7 +31,7 @@ def process_employee_response(data):
         doc.employee_name = item.get("emp_name")
         doc.employee_code = item.get("emp_code")
         doc.emp_country_code = item.get("emp_country_code")
-        doc.mobile_no = item.get("emp_number")
+        doc.employee_no = item.get("emp_number")
         doc.tags = ", ".join(item.get("emp_tags", []))
         doc.app_version = item.get("app_version")
         doc.registered_at = parse_datetime(item.get("registered_at"))
