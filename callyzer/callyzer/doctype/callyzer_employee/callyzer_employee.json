@@ -11,9 +11,10 @@
   "column_break_wakj",
   "mobile_no",
   "tags",
+  "app_version",
   "section_break_udvr",
   "registered_at",
-  "last_sync_call",
+  "last_call_at",
   "column_break_eivt",
   "modified_at",
   "last_sync_req_at",
@@ -33,8 +34,7 @@
    "fieldname": "employee_code",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Employee Code",
-   "reqd": 1
+   "label": "Employee Code"
   },
   {
    "fieldname": "employee_name",
@@ -55,7 +55,7 @@
   },
   {
    "fieldname": "mobile_no",
-   "fieldtype": "Phone",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Mobile No",
    "reqd": 1
@@ -122,11 +122,6 @@
    "label": "Registered At"
   },
   {
-   "fieldname": "last_sync_call",
-   "fieldtype": "Datetime",
-   "label": "Last Sync Call"
-  },
-  {
    "fieldname": "column_break_eivt",
    "fieldtype": "Column Break"
   },
@@ -139,12 +134,22 @@
    "fieldname": "last_sync_req_at",
    "fieldtype": "Datetime",
    "label": "Last Sync Req At"
+  },
+  {
+   "fieldname": "app_version",
+   "fieldtype": "Data",
+   "label": "App Version"
+  },
+  {
+   "fieldname": "last_call_at",
+   "fieldtype": "Datetime",
+   "label": "Last Call At"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-10 11:57:21.035242",
+ "modified": "2025-05-10 12:29:42.677008",
  "modified_by": "Administrator",
  "module": "Callyzer",
  "name": "Callyzer Employee",

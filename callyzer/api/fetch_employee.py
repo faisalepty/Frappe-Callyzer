@@ -1,6 +1,8 @@
 
 
 import frappe
+from datetime import datetime
+import json
 
 @frappe.whitelist()
 def fetch_employees():
@@ -26,21 +28,25 @@ def process_employee_response(data):
             continue
 
         doc = frappe.new_doc("Callyzer Employee")
-        doc.emp_name = item.get("emp_name")
-        doc.emp_code = item.get("emp_code")
+        doc.employee_name = item.get("emp_name")
+        doc.employee_code = item.get("emp_code")
         doc.emp_country_code = item.get("emp_country_code")
-        doc.emp_number = item.get("emp_number")
-        doc.emp_tags = ", ".join(item.get("emp_tags", []))
+        doc.mobile_no = item.get("emp_number")
+        doc.tags = ", ".join(item.get("emp_tags", []))
         doc.app_version = item.get("app_version")
-        doc.registered_at = item.get("registered_at")
-        doc.modified_at = item.get("modified_at")
-        doc.last_call_at = item.get("last_call_at")
-        doc.last_sync_req_at = item.get("last_sync_req_at")
+        doc.registered_at = parse_datetime(item.get("registered_at"))
+        doc.modified_at = parse_datetime(item.get("modified_at"))
+        doc.last_call_at = parse_datetime(item.get("last_call_at"))
+        doc.last_sync_req_at = parse_datetime(item.get("last_sync_req_at"))
         doc.is_lead_active = item.get("is_lead_active")
         doc.is_call_recording_active = item.get("is_call_recording_active")
+        doc.device_details = json.dumps(item.get("device_details", {}))
+        doc.device_preference = json.dumps(item.get("device_preference", {}))
+        doc.app_settings = json.dumps(item.get("app_settings", {}))
      
         doc.insert(ignore_permissions=True)
         created += 1
+        print(f"Created Callyzer Employee: {doc.employee_name} ({doc.mobile_no})")
 
     return created
 
@@ -58,4 +64,34 @@ def get_callyzer_settings():
         "Callyzer Settings",
         fields=["name", "domain_api", "employee", "call_log", "api_key", "company"]
     )
+
+
+@frappe.whitelist(allow_guest=True)
+def callyzer_employee_webhook():
+    """Receive data from Callyzer via webhook and process it."""
+    try:
+        if frappe.request.method != "POST":
+            frappe.throw(_("Webhook only accepts POST requests"), frappe.ValidationError)
+
+        payload = frappe.request.get_json()
+        if not payload:
+            frappe.throw(_("Invalid or empty JSON payload"))
+
+        data = payload.get("result", []) or [payload]  # Handle both batch and single
+        created = process_employee_response(data)
+
+        return {"status": "success", "created": created}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Webhook: Failed to process Callyzer Employee data")
+        return {"status": "error", "message": "Processing failed"}
+    
+
+def parse_datetime(value):
+    if not value:
+        return None
+    try:
+        clean_value = value.split(' ')[0] + ' ' + value.split(' ')[1]
+        return datetime.strptime(clean_value, "%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return None
 
