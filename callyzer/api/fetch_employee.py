@@ -24,29 +24,10 @@ def fetch_employees():
 def process_employee_response(data):
     created = 0
     for item in data:
-        if frappe.db.exists("Callyzer Employee", {"emp_number": item.get("emp_number")}):
+        if frappe.db.exists("Callyzer Employee", {"employee_no": item.get("emp_number")}):
             continue
-
-        doc = frappe.new_doc("Callyzer Employee")
-        doc.employee_name = item.get("emp_name")
-        doc.employee_code = item.get("emp_code")
-        doc.emp_country_code = item.get("emp_country_code")
-        doc.employee_no = item.get("emp_number")
-        doc.tags = ", ".join(item.get("emp_tags", []))
-        doc.app_version = item.get("app_version")
-        doc.registered_at = parse_datetime(item.get("registered_at"))
-        doc.modified_at = parse_datetime(item.get("modified_at"))
-        doc.last_call_at = parse_datetime(item.get("last_call_at"))
-        doc.last_sync_req_at = parse_datetime(item.get("last_sync_req_at"))
-        doc.is_lead_active = item.get("is_lead_active")
-        doc.is_call_recording_active = item.get("is_call_recording_active")
-        doc.device_details = json.dumps(item.get("device_details", {}))
-        doc.device_preference = json.dumps(item.get("device_preference", {}))
-        doc.app_settings = json.dumps(item.get("app_settings", {}))
-     
-        doc.insert(ignore_permissions=True)
+        process_employee(item)
         created += 1
-        print(f"Created Callyzer Employee: {doc.employee_name} ({doc.mobile_no})")
 
     return created
 
@@ -77,7 +58,7 @@ def callyzer_employee_webhook():
         if not payload:
             frappe.throw(_("Invalid or empty JSON payload"))
 
-        data = payload.get("result", []) or [payload]  # Handle both batch and single
+        data = payload.get("result", []) or [payload]
         created = process_employee_response(data)
 
         return {"status": "success", "created": created}
@@ -95,3 +76,30 @@ def parse_datetime(value):
     except Exception:
         return None
 
+def process_employee(item):
+    """Create employee if not exists and return employee name and creation status."""
+    emp_number = item.get("emp_number")
+
+    existing = frappe.db.exists("Callyzer Employee", {"employee_no": emp_number})
+    if existing:
+        return frappe.get_value("Callyzer Employee", {"employee_no": emp_number}, "name"), False
+
+    doc = frappe.new_doc("Callyzer Employee")
+    doc.employee_name = item.get("emp_name")
+    doc.employee_code = item.get("emp_code")
+    doc.emp_country_code = item.get("emp_country_code")
+    doc.employee_no = item.get("emp_number")
+    doc.tags = ", ".join(item.get("emp_tags", []))
+    doc.app_version = item.get("app_version")
+    doc.registered_at = parse_datetime(item.get("registered_at"))
+    doc.modified_at = parse_datetime(item.get("modified_at"))
+    doc.last_call_at = parse_datetime(item.get("last_call_at"))
+    doc.last_sync_req_at = parse_datetime(item.get("last_sync_req_at"))
+    doc.is_lead_active = item.get("is_lead_active")
+    doc.is_call_recording_active = item.get("is_call_recording_active")
+    doc.device_details = json.dumps(item.get("device_details", {}))
+    doc.device_preference = json.dumps(item.get("device_preference", {}))
+    doc.app_settings = json.dumps(item.get("app_settings", {}))
+    
+    doc.insert(ignore_permissions=True)
+    return doc.name, True

@@ -2,7 +2,7 @@ import frappe
 import requests
 import json
 from callyzer.callyzer.utils import get_callyzer_settings
-from callyzer.api.fetch_employee import parse_datetime
+from callyzer.api.fetch_employee import parse_datetime, process_employee
 from frappe import _
 from datetime import datetime
 
@@ -85,25 +85,6 @@ def normalize_payload(payload):
     else:
         frappe.throw(_("Unexpected payload format"))
 
-
-def process_employee(item):
-    """Create employee if not exists and return employee name and creation status."""
-    emp_number = item.get("emp_number")
-    emp_name = item.get("emp_name")
-
-    existing = frappe.db.exists("Callyzer Employee", {"employee_no": emp_number})
-    if existing:
-        return frappe.get_value("Callyzer Employee", {"employee_no": emp_number}, "name"), False
-
-    doc = frappe.new_doc("Callyzer Employee")
-    doc.employee_name = emp_name
-    doc.employee_no = emp_number
-    doc.employee_code = item.get("emp_code")
-    doc.emp_country_code = item.get("emp_country_code")
-    doc.mobile_no = emp_number
-    doc.tags = ", ".join(item.get("emp_tags", []))
-    doc.insert(ignore_permissions=True)
-    return doc.name, True
 
 
 def process_call_logs(employee_name, call_logs):
