@@ -33,7 +33,6 @@
   {
    "fieldname": "call_log_id",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Call Log ID",
    "reqd": 1,
    "unique": 1
@@ -51,6 +50,7 @@
   {
    "fieldname": "client_no",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Client No",
    "reqd": 1
   },
@@ -130,6 +130,7 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Employee",
    "options": "Callyzer Employee",
    "reqd": 1
@@ -150,7 +151,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-10 15:26:21.312121",
+ "modified": "2025-05-10 16:25:10.970732",
  "modified_by": "Administrator",
  "module": "Callyzer",
  "name": "Callyzer Call Log",

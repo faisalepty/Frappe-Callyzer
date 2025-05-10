@@ -43,7 +43,7 @@ def fetch_summary_report():
 
 @frappe.whitelist(allow_guest=True)
 def callyzer_call_log_webhook():
-    """Receive data from Callyzer via webhook and process employee & call log data."""
+    """Webhook endpoint for receiving and processing Callyzer employee & call log data."""
     try:
         if frappe.request.method != "POST":
             frappe.throw(_("Webhook only accepts POST requests"), frappe.ValidationError)
@@ -52,60 +52,18 @@ def callyzer_call_log_webhook():
         if not payload:
             frappe.throw(_("Invalid or empty JSON payload"))
 
-        if isinstance(payload, list):
-            data = payload
-        elif isinstance(payload, dict):
-            data = payload.get("result", []) or [payload]
-        else:
-            frappe.throw(_("Unexpected payload format"))
+        data = normalize_payload(payload)
 
         total_created = 0
         total_logs = 0
 
         for item in data:
-            emp_number = item.get("emp_number")
-            emp_name = item.get("emp_name")
-
-            # Check if employee exists
-            existing_employee = frappe.db.exists("Callyzer Employee", {"employee_no": emp_number})
-            if not existing_employee:
-                employee_doc = frappe.new_doc("Callyzer Employee")
-                employee_doc.employee_name = emp_name
-                employee_doc.employee_no = emp_number
-                employee_doc.employee_code = item.get("emp_code")
-                employee_doc.emp_country_code = item.get("emp_country_code")
-                employee_doc.mobile_no = emp_number
-                employee_doc.tags = ", ".join(item.get("emp_tags", []))
-                employee_doc.insert(ignore_permissions=True)
-                created_employee = employee_doc.name
+            employee_name, is_new = process_employee(item)
+            if is_new:
                 total_created += 1
-            else:
-                created_employee = frappe.get_value("Callyzer Employee", {"employee_number": emp_number}, "name")
 
-            # Process call logs
-            call_logs = item.get("call_logs", [])
-            for call in call_logs:
-                if not frappe.db.exists("Callyzer Call Log", {"external_id": call["id"]}):
-                    call_log = frappe.new_doc("Callyzer Call Log")
-                    call_log.employee = created_employee
-                    call_log.call_log_id = call["id"]
-                    call_log.client_name = call["client_name"]
-                    call_log.client_country_code = call["client_country_code"]
-                    call_log.client_no = call["client_number"]
-                    call_log.duration = call["duration"]
-                    call_log.call_type = call["call_type"]
-                    call_log.call_date = call["call_date"]
-                    call_log.call_time = call["call_time"]
-                    call_log.note = json.dumps(call.get("note", ""))
-                    call_log.call_recording_url = call["call_recording_url"]
-                    call_log.crm_status = call.get("crm_status")
-                    call_log.reminder_date = call.get("reminder_date")
-                    call_log.reminder_time = call.get("reminder_time")
-                    call_log.synced_at = parse_datetime(call.get("synced_at"))
-                    call_log.modified_at = parse_datetime(call.get("modified_at"))
-
-                    call_log.insert(ignore_permissions=True)
-                    total_logs += 1
+            logs_created = process_call_logs(employee_name, item.get("call_logs", []))
+            total_logs += logs_created
 
         return {
             "status": "success",
@@ -116,3 +74,64 @@ def callyzer_call_log_webhook():
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Webhook: Failed to process Callyzer data")
         return {"status": "error", "message": "Processing failed"}
+
+
+def normalize_payload(payload):
+    """Normalize input payload to a list of data dictionaries."""
+    if isinstance(payload, list):
+        return payload
+    elif isinstance(payload, dict):
+        return payload.get("result", []) or [payload]
+    else:
+        frappe.throw(_("Unexpected payload format"))
+
+
+def process_employee(item):
+    """Create employee if not exists and return employee name and creation status."""
+    emp_number = item.get("emp_number")
+    emp_name = item.get("emp_name")
+
+    existing = frappe.db.exists("Callyzer Employee", {"employee_no": emp_number})
+    if existing:
+        return frappe.get_value("Callyzer Employee", {"employee_no": emp_number}, "name"), False
+
+    doc = frappe.new_doc("Callyzer Employee")
+    doc.employee_name = emp_name
+    doc.employee_no = emp_number
+    doc.employee_code = item.get("emp_code")
+    doc.emp_country_code = item.get("emp_country_code")
+    doc.mobile_no = emp_number
+    doc.tags = ", ".join(item.get("emp_tags", []))
+    doc.insert(ignore_permissions=True)
+    return doc.name, True
+
+
+def process_call_logs(employee_name, call_logs):
+    """Create new call logs for the employee and return the number created."""
+    count = 0
+    for call in call_logs:
+        if frappe.db.exists("Callyzer Call Log", {"external_id": call["id"]}):
+            continue
+
+        doc = frappe.new_doc("Callyzer Call Log")
+        doc.employee = employee_name
+        doc.call_log_id = call["id"]
+        doc.client_name = call["client_name"]
+        doc.client_country_code = call["client_country_code"]
+        doc.client_no = call["client_number"]
+        doc.duration = call["duration"]
+        doc.call_type = call["call_type"]
+        doc.call_date = call["call_date"]
+        doc.call_time = call["call_time"]
+        doc.note = json.dumps(call.get("note", ""))
+        doc.call_recording_url = call["call_recording_url"]
+        doc.crm_status = call.get("crm_status")
+        doc.reminder_date = call.get("reminder_date")
+        doc.reminder_time = call.get("reminder_time")
+        doc.synced_at = parse_datetime(call.get("synced_at"))
+        doc.modified_at = parse_datetime(call.get("modified_at"))
+
+        doc.insert(ignore_permissions=True)
+        count += 1
+
+    return count
