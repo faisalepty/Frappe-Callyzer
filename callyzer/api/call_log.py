@@ -4,7 +4,6 @@ import json
 from callyzer.callyzer.utils import get_callyzer_settings
 from callyzer.api.fetch_employee import parse_datetime, process_employee
 from frappe import _
-from datetime import datetime
 
 @frappe.whitelist()
 def fetch_summary_report():
