@@ -1,0 +1,170 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-10 09:31:38.834524",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee_code",
+  "employee_name",
+  "country",
+  "column_break_wakj",
+  "mobile_no",
+  "tags",
+  "section_break_udvr",
+  "registered_at",
+  "last_sync_call",
+  "column_break_eivt",
+  "modified_at",
+  "last_sync_req_at",
+  "section_break_lvtm",
+  "device_details",
+  "column_break_zziz",
+  "device_preference",
+  "column_break_kfrk",
+  "app_settings",
+  "section_break_vqzg",
+  "is_call_recording_active",
+  "column_break_lixn",
+  "is_lead_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Code",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "label": "Country",
+   "options": "Country"
+  },
+  {
+   "fieldname": "column_break_wakj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Phone",
+   "in_list_view": 1,
+   "label": "Mobile No",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tags",
+   "fieldtype": "Data",
+   "label": "Tags"
+  },
+  {
+   "fieldname": "section_break_lvtm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "device_details",
+   "fieldtype": "Small Text",
+   "label": "Device details"
+  },
+  {
+   "fieldname": "column_break_zziz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "device_preference",
+   "fieldtype": "Small Text",
+   "label": "Device Preference"
+  },
+  {
+   "fieldname": "column_break_kfrk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_settings",
+   "fieldtype": "Small Text",
+   "label": "App settings"
+  },
+  {
+   "fieldname": "section_break_vqzg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_call_recording_active",
+   "fieldtype": "Check",
+   "label": "Is Call Recording Active"
+  },
+  {
+   "fieldname": "column_break_lixn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_lead_active",
+   "fieldtype": "Check",
+   "label": "Is Lead Active"
+  },
+  {
+   "fieldname": "section_break_udvr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "registered_at",
+   "fieldtype": "Datetime",
+   "label": "Registered At"
+  },
+  {
+   "fieldname": "last_sync_call",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Call"
+  },
+  {
+   "fieldname": "column_break_eivt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "modified_at",
+   "fieldtype": "Datetime",
+   "label": "Modified At"
+  },
+  {
+   "fieldname": "last_sync_req_at",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Req At"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-10 11:57:21.035242",
+ "modified_by": "Administrator",
+ "module": "Callyzer",
+ "name": "Callyzer Employee",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
