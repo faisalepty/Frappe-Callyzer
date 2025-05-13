@@ -3,6 +3,32 @@
 import frappe
 from datetime import datetime
 import json
+import requests
+from frappe import _
+
+def fetch_employee_data_from_api(setting):
+    url = setting.domain_api + setting.employee
+    headers = {
+        "Authorization": f"Bearer {setting.api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "emp_numbers": [],
+        "emp_tags": [],
+        "emp_name": "",
+        "emp_codes": [],
+        "page_no": 1,
+        "page_size": 2
+    }
+
+    # Send GET with body (non-standard, but Callyzer allows it)
+    response = requests.request("GET", url, headers=headers, data=json.dumps(payload))
+    # Optional: handle errors
+    if response.status_code != 200:
+        frappe.throw(f"Failed to fetch employees: {response.text}")
+
+    return response.json()
+
 
 @frappe.whitelist()
 def fetch_employees():
@@ -28,24 +54,37 @@ def process_employee_response(data):
             continue
         process_employee(item)
         created += 1
-
     return created
-
 
 def fetch_employee_data_from_api(setting):
     url = setting.domain_api + setting.employee
     headers = {
-        "spi-key": setting.api_key,
-        "company": setting.company
+        "Authorization": f"Bearer {setting.api_key}",
+        "Content-Type": "application/json"
     }
-    return frappe.make_get_request(url, headers=headers)
+    payload = {
+        "emp_numbers": [],
+        "emp_tags": [],
+        "emp_name": "",
+        "emp_codes": [],
+        "page_no": 1,
+        "page_size": 2
+    }
+    data=json.dumps(payload)
+    response = requests.request("GET", url, headers=headers, data=data)
+
+    if response.status_code != 200:
+        frappe.throw(f"Failed to fetch employees: {response.text}")
+
+    return response.json()
+
+
 
 def get_callyzer_settings():
     return frappe.get_all(
         "Callyzer Settings",
         fields=["name", "domain_api", "employee", "call_log", "api_key", "company"]
     )
-
 
 @frappe.whitelist(allow_guest=True)
 def callyzer_employee_webhook():

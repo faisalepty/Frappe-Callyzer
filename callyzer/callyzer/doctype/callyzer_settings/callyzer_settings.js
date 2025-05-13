@@ -31,7 +31,7 @@ frappe.ui.form.on('Callyzer Settings', {
                         fieldtype: 'Date',
                         default: today,
                         reqd: true
-                    }
+                    },
                 ],
                 primary_action_label: 'Fetch',
                 primary_action(values) {
@@ -45,7 +45,7 @@ frappe.ui.form.on('Callyzer Settings', {
                         },
                         callback: function(r) {
                             if (r.message) {
-                                const summary = r.message;
+                                const summary = r.message.result; // FIXED: Extract only the result part
                                 let content = `<div><strong>Summary Report</strong></div><br/>`;
                                 for (const [key, value] of Object.entries(summary)) {
                                     content += `<div><b>${frappe.utils.to_title_case(key.replace(/_/g, ' '))}:</b> ${value}</div>`;
@@ -54,6 +54,13 @@ frappe.ui.form.on('Callyzer Settings', {
                                 const result_dialog = new frappe.ui.Dialog({
                                     title: 'Summary Report Result',
                                     size: 'large',
+                                    fields: [
+                                                {
+                                                    fieldtype: 'HTML',
+                                                    fieldname: 'summary_html',
+                                                    options: content
+                                                }
+                                            ],
                                     primary_action_label: 'Print',
                                     primary_action() {
                                         const print_window = window.open('', '', 'width=800,height=600');
@@ -63,9 +70,10 @@ frappe.ui.form.on('Callyzer Settings', {
                                     }
                                 });
 
-                                result_dialog.set_message(content);
-                                result_dialog.show();
-                            }
+    result_dialog.set_message(content);
+    result_dialog.show();
+}
+
                         }
                     });
                 }

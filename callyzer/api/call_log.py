@@ -7,29 +7,35 @@ from frappe import _
 
 @frappe.whitelist()
 def fetch_summary_report():
-    start_date = frappe.form_dict.get("start_date")
-    end_date = frappe.form_dict.get("end_date")
+    call_from = frappe.form_dict.get("start_date")
+    call_to = frappe.form_dict.get("end_date")
     company = frappe.form_dict.get("company")
-    if not start_date or not end_date:
-        frappe.throw(_("Start date and end date are required"))
-        
+
+    if not call_from or not call_to:
+        frappe.throw(_("Call from and call to (timestamps) are required"))
+
     settings = get_callyzer_settings(company)
     if not settings:
         frappe.throw(_("Callyzer settings not found for the company"))
-    
-    url = settings.domain_api + settings.call_log + "/summary_report"
-    api_key = settings.api_key
+
+    url = f"{settings.domain_api}/call-log/summary"
+    token = settings.api_key  # assuming this is the Bearer token
 
     headers = {
-        "spi-key": api_key,
-        "company": company,
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-
+    call_from_ = 1747113263
+    call_to_ = 1747117100
+    
     payload = {
-        "start_date": start_date,
-        "end_date": end_date,
-        "company": company,
+        "call_from": int(call_from_),
+        "call_to": int(call_to_),
+        "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
+        "emp_numbers": ["780454763", "733511309", "733366016", "785388806", "785388805"],
+        "duration_les_than": 20,
+        "emp_tags": ["api"],
+        "is_exclude_numbers": True
     }
 
     try:
@@ -39,6 +45,40 @@ def fetch_summary_report():
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), _("Failed to fetch summary report"))
         frappe.throw(_("Error fetching summary report"))
+
+# def fetch_summary_report():
+#     start_date = frappe.form_dict.get("start_date")
+#     end_date = frappe.form_dict.get("end_date")
+#     company = frappe.form_dict.get("company")
+#     if not start_date or not end_date:
+#         frappe.throw(_("Start date and end date are required"))
+        
+#     settings = get_callyzer_settings(company)
+#     if not settings:
+#         frappe.throw(_("Callyzer settings not found for the company"))
+    
+#     url = settings.domain_api + settings.call_log + "/summary_report"
+#     api_key = settings.api_key
+
+#     headers = {
+#         "spi-key": api_key,
+#         "company": company,
+#         "Content-Type": "application/json"
+#     }
+
+#     payload = {
+#         "start_date": start_date,
+#         "end_date": end_date,
+#         "company": company,
+#     }
+
+#     try:
+#         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=10)
+#         response.raise_for_status()
+#         return response.json()
+#     except Exception as e:
+#         frappe.log_error(frappe.get_traceback(), _("Failed to fetch summary report"))
+#         frappe.throw(_("Error fetching summary report"))
 
 @frappe.whitelist(allow_guest=True)
 def callyzer_call_log_webhook():
