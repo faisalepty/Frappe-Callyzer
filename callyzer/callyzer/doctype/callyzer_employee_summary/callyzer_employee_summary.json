@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-15 00:22:28.843496",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "total_incoming_calls",
+  "total_incoming_duration",
+  "column_break_qsat",
+  "total_incoming_connected_calls",
+  "total_outgoing_calls",
+  "section_break_vmrt",
+  "total_rejected_calls",
+  "total_missed_calls",
+  "total_connected_calls",
+  "total_calls",
+  "column_break_szax",
+  "total_duration",
+  "total_not_picked_by_clients_calls",
+  "total_unique_clients",
+  "total_working_hours",
+  "section_break_olpb",
+  "last_call_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Callyzer Employee"
+  },
+  {
+   "fieldname": "total_incoming_calls",
+   "fieldtype": "Int",
+   "label": "Total Incoming Calls"
+  },
+  {
+   "fieldname": "total_incoming_duration",
+   "fieldtype": "Int",
+   "label": "Total Incoming Duration"
+  },
+  {
+   "fieldname": "column_break_qsat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_incoming_connected_calls",
+   "fieldtype": "Int",
+   "label": "Total Incoming Connected Calls"
+  },
+  {
+   "fieldname": "total_outgoing_calls",
+   "fieldtype": "Int",
+   "label": "Total Outgoing Calls"
+  },
+  {
+   "fieldname": "section_break_vmrt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_rejected_calls",
+   "fieldtype": "Int",
+   "label": "Total Rejected Calls"
+  },
+  {
+   "fieldname": "total_missed_calls",
+   "fieldtype": "Int",
+   "label": "Total Missed Calls"
+  },
+  {
+   "fieldname": "total_connected_calls",
+   "fieldtype": "Int",
+   "label": "Total Connected Calls"
+  },
+  {
+   "fieldname": "total_calls",
+   "fieldtype": "Int",
+   "label": "Total Calls"
+  },
+  {
+   "fieldname": "column_break_szax",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_duration",
+   "fieldtype": "Int",
+   "label": "Total Duration"
+  },
+  {
+   "fieldname": "total_not_picked_by_clients_calls",
+   "fieldtype": "Int",
+   "label": "Total Not Picked BY Clients Calls"
+  },
+  {
+   "fieldname": "total_unique_clients",
+   "fieldtype": "Int",
+   "label": "Total Unique Clients"
+  },
+  {
+   "fieldname": "total_working_hours",
+   "fieldtype": "Data",
+   "label": "Total Working Hours"
+  },
+  {
+   "fieldname": "section_break_olpb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "last_call_log",
+   "fieldtype": "Small Text",
+   "label": "Last Call Log"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-15 00:27:05.638217",
+ "modified_by": "Administrator",
+ "module": "Callyzer",
+ "name": "Callyzer Employee Summary",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -12,8 +12,8 @@ frappe.ui.form.on('Callyzer Settings', {
         }, __('Action'));
 
         frm.add_custom_button(__('Fetch Summary Report'), function() {
-            const today = frappe.datetime.get_datetime_as_string(); // current datetime
-            const one_month_ago = frappe.datetime.add_months(today, -1); // one month ago datetime
+            const today = frappe.datetime.get_datetime_as_string(); 
+            const one_month_ago = frappe.datetime.add_days(today, -1);
 
             const d = new frappe.ui.Dialog({
                 title: 'Fetch Summary Report',
@@ -37,7 +37,9 @@ frappe.ui.form.on('Callyzer Settings', {
                 primary_action(values) {
                     d.hide();
                     frappe.call({
-                        method: 'callyzer.api.call_log.fetch_summary_report',
+                        // method: 'callyzer.api.call_log.fetch_summary_report',
+                        method: 'callyzer.api.call_log.fetch_employee_summary_report',
+
                         args: {
                             start_date: values.start_date,
                             end_date: values.end_date,
@@ -45,7 +47,7 @@ frappe.ui.form.on('Callyzer Settings', {
                         },
                         callback: function(r) {
                             if (r.message) {
-                                const summary = r.message.result; // FIXED: Extract only the result part
+                                const summary = r.message.result;
                                 let content = `<div><strong>Summary Report</strong></div><br/>`;
                                 for (const [key, value] of Object.entries(summary)) {
                                     content += `<div><b>${frappe.utils.to_title_case(key.replace(/_/g, ' '))}:</b> ${value}</div>`;

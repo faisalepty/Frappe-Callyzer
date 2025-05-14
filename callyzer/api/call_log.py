@@ -28,19 +28,14 @@ def fetch_summary_report():
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    call_from_ = 1747083600
-
-    call_to_ = 1747255612
-    # frappe.throw(str(call_to))
+ 
     employee_ids = get_employees()
     
-    # frappe.throw(str(employee_ids))
     payload = {
-        "call_from": int(call_from_),
-        "call_to": int(call_to_),
+        "call_from": int(call_from),
+        "call_to": int(call_to),
         "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
         "emp_numbers": employee_ids,
-        # "emp_numbers": ["780454763", "733511309", "733366016", "785388806", "785388805"],
         "duration_les_than": 20,
         "emp_tags": ["api"],
         "is_exclude_numbers": True
@@ -147,3 +142,87 @@ def format_time_timestamp(dt=None):
     if dt is None:
         dt = datetime.now()
     return int(time.mktime(dt.timetuple()))
+
+def format_time_timestamp_(date):
+    return int(datetime.timestamp(date))
+
+@frappe.whitelist()
+def fetch_employee_summary_report():
+    # Fetch and validate parameters
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date and Company are required"))
+
+    try:
+        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    # Get API settings
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    # Prepare headers and payload
+    url = f"{settings.domain_api}/call-log/employee-summary"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
+        "emp_numbers": [],
+        "duration_les_than": 20,
+        "emp_tags": [],
+        "is_exclude_numbers": True
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
+        response.raise_for_status()
+        employees = employees = response.json().get("result", [])
+
+
+        inserted = 0
+        for emp in employees:
+            if not frappe.db.exists("Callyzer Employee", {"employee_no": emp.get("emp_number")}):
+                process_employee(emp)
+
+            doc = frappe.new_doc("Callyzer Employee Summary")
+            doc.employee_name = emp.get("emp_name")
+            doc.employee_code = emp.get("emp_code")
+            doc.emp_country_code = emp.get("emp_country_code")
+            doc.employee = emp.get("emp_number")
+            doc.emp_tags = ", ".join(emp.get("emp_tags", []))
+            doc.total_incoming_calls = emp.get("total_incoming_calls")
+            doc.total_outgoing_calls = emp.get("total_outgoing_calls")
+            doc.total_missed_calls = emp.get("total_missed_calls")
+            doc.total_rejected_calls = emp.get("total_rejected_calls")
+            doc.total_calls = emp.get("total_calls")
+            doc.total_duration = emp.get("total_duration")
+            doc.total_connected_calls = emp.get("total_connected_calls")
+            doc.total_never_attended_calls = emp.get("total_never_attended_calls")
+            doc.total_not_pickup_by_clients_calls = emp.get("total_not_pickup_by_clients_calls")
+            doc.total_unique_clients = emp.get("total_unique_clients")
+            doc.total_working_hours = emp.get("total_working_hours")
+            doc.avg_duration_per_call = emp.get("avg_duration_per_call")
+            doc.avg_incoming_duration = emp.get("avg_incoming_duration")
+            doc.avg_outgoing_duration = emp.get("avg_outgoing_duration")
+
+            doc.last_call_log = json.dumps(emp.get("last_call_log", {}))
+
+            doc.insert(ignore_permissions=True)
+            inserted += 1
+
+        return {"status": "success", "inserted": inserted}
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch Callyzer summary"))
+        frappe.throw(_("Could not fetch employee summary report"))
