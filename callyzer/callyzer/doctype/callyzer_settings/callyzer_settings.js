@@ -12,8 +12,8 @@ frappe.ui.form.on('Callyzer Settings', {
         }, __('Action'));
 
         frm.add_custom_button(__('Fetch Summary Report'), function() {
-            const today = frappe.datetime.get_today();
-            const one_month_ago = frappe.datetime.add_months(today, -1);
+            const today = frappe.datetime.get_datetime_as_string(); // current datetime
+            const one_month_ago = frappe.datetime.add_months(today, -1); // one month ago datetime
 
             const d = new frappe.ui.Dialog({
                 title: 'Fetch Summary Report',
@@ -21,14 +21,14 @@ frappe.ui.form.on('Callyzer Settings', {
                     {
                         label: 'Start Date',
                         fieldname: 'start_date',
-                        fieldtype: 'Date',
+                        fieldtype: 'Datetime',
                         default: one_month_ago,
                         reqd: true
                     },
                     {
                         label: 'End Date',
                         fieldname: 'end_date',
-                        fieldtype: 'Date',
+                        fieldtype: 'Datetime',
                         default: today,
                         reqd: true
                     },

@@ -4,13 +4,16 @@ import json
 from callyzer.callyzer.utils import get_callyzer_settings
 from callyzer.api.fetch_employee import parse_datetime, process_employee
 from frappe import _
+import time
+from datetime import datetime
+
 
 @frappe.whitelist()
 def fetch_summary_report():
-    call_from = frappe.form_dict.get("start_date")
-    call_to = frappe.form_dict.get("end_date")
+    call_from = format_time_timestamp(datetime.strptime(frappe.form_dict.get("start_date"), "%Y-%m-%d %H:%M:%S"))
+    call_to = format_time_timestamp(datetime.strptime(frappe.form_dict.get("end_date"), "%Y-%m-%d %H:%M:%S"))
     company = frappe.form_dict.get("company")
-
+    # frappe.throw(str(call_from))
     if not call_from or not call_to:
         frappe.throw(_("Call from and call to (timestamps) are required"))
 
@@ -25,14 +28,19 @@ def fetch_summary_report():
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    call_from_ = 1747113263
-    call_to_ = 1747117100
+    call_from_ = 1747083600
+
+    call_to_ = 1747255612
+    # frappe.throw(str(call_to))
+    employee_ids = get_employees()
     
+    # frappe.throw(str(employee_ids))
     payload = {
         "call_from": int(call_from_),
         "call_to": int(call_to_),
         "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
-        "emp_numbers": ["780454763", "733511309", "733366016", "785388806", "785388805"],
+        "emp_numbers": employee_ids,
+        # "emp_numbers": ["780454763", "733511309", "733366016", "785388806", "785388805"],
         "duration_les_than": 20,
         "emp_tags": ["api"],
         "is_exclude_numbers": True
@@ -46,39 +54,6 @@ def fetch_summary_report():
         frappe.log_error(frappe.get_traceback(), _("Failed to fetch summary report"))
         frappe.throw(_("Error fetching summary report"))
 
-# def fetch_summary_report():
-#     start_date = frappe.form_dict.get("start_date")
-#     end_date = frappe.form_dict.get("end_date")
-#     company = frappe.form_dict.get("company")
-#     if not start_date or not end_date:
-#         frappe.throw(_("Start date and end date are required"))
-        
-#     settings = get_callyzer_settings(company)
-#     if not settings:
-#         frappe.throw(_("Callyzer settings not found for the company"))
-    
-#     url = settings.domain_api + settings.call_log + "/summary_report"
-#     api_key = settings.api_key
-
-#     headers = {
-#         "spi-key": api_key,
-#         "company": company,
-#         "Content-Type": "application/json"
-#     }
-
-#     payload = {
-#         "start_date": start_date,
-#         "end_date": end_date,
-#         "company": company,
-#     }
-
-#     try:
-#         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=10)
-#         response.raise_for_status()
-#         return response.json()
-#     except Exception as e:
-#         frappe.log_error(frappe.get_traceback(), _("Failed to fetch summary report"))
-#         frappe.throw(_("Error fetching summary report"))
 
 @frappe.whitelist(allow_guest=True)
 def callyzer_call_log_webhook():
@@ -155,3 +130,20 @@ def process_call_logs(employee_name, call_logs):
         count += 1
 
     return count
+
+def get_employees():
+    employees_id = []
+    all_callyzer_employee = frappe.get_all("Callyzer Employee", fields=["name"])
+    for employee in all_callyzer_employee:
+        employees_id.append(employee.name)
+    return employees_id
+
+
+def format_time_timestamp(dt=None):
+    """
+    Convert a datetime object to Unix timestamp (seconds since epoch).
+    If no datetime is provided, use the current time.
+    """
+    if dt is None:
+        dt = datetime.now()
+    return int(time.mktime(dt.timetuple()))
