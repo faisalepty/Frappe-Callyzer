@@ -328,4 +328,64 @@ def fetch_analysis_report():
         frappe.throw(_("Could not fetch analysis report"))
         
         
-    
+        
+#Fetch Never Attended Report
+def fetch_never_attended_calls():
+    url = "https://your.callyzer.instance/call-log/never-attended"
+    payload = {
+        "call_from": 1691649001,
+        "call_to": 1707197072,
+        "emp_numbers": [],
+        "emp_tags": [],
+        "is_exclude_numbers": True,
+        "page_no": 1,
+        "page_size": 10
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer your_api_key_here"
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    handle_never_attended_calls(response)
+    if response.status_code != 200:
+        frappe.throw(f"Failed to fetch data: {response.status_code} - {response.text}")
+
+    return response.json()
+
+def handle_never_attended_calls(response):
+    if not response.get("result"):
+        frappe.msgprint("No records found.")
+        return
+
+    for emp in response["result"]:
+        emp_number = emp.get("emp_number")
+
+        # Use your existing function if employee doesn't exist
+        if not frappe.db.exists("Callyzer Employee", {"employee_no": emp_number}):
+            process_employee(emp)
+
+        for log in emp.get("call_logs", []):
+            if not frappe.db.exists("Callyzer Analysis", {"call_log_id": log["id"]}):
+                doc = frappe.new_doc("Callyzer Analysis")
+                doc.employee = emp_number
+                doc.emp_code = emp.get("emp_code")
+                doc.emp_name = emp.get("emp_name")
+                doc.emp_number = emp_number
+                doc.client_name = emp.get("client_name")
+                doc.client_number = emp.get("client_number")
+                doc.call_log_id = log.get("id")
+                doc.duration = log.get("duration")
+                doc.call_type = log.get("call_type")
+                doc.call_date = log.get("call_date")
+                doc.call_time = log.get("call_time")
+                doc.note = log.get("note")
+                doc.call_recording_url = log.get("call_recording_url")
+                doc.synced_at = log.get("synced_at")
+                doc.modified_at = log.get("modified_at")
+                doc.insert(ignore_permissions=True)
+
+    frappe.db.commit()
+
+
