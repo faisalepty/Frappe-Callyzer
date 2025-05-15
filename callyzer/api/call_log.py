@@ -787,3 +787,39 @@ def process_call_history_response(response_json, company):
         "inserted": inserted,
         "records_fetched": len(call_logs)
     }
+
+#Fetch Call History By Ids
+@frappe.whitelist()
+def fetch_call_history_by_ids():
+    unique_ids = frappe.form_dict.get("unique_ids")
+    company = frappe.form_dict.get("company")
+
+    if not unique_ids or not isinstance(unique_ids, list):
+        frappe.throw(_("Please provide a valid list of Unique IDs"))
+    
+    if not company:
+        frappe.throw(_("Company is required"))
+
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    url = f"{settings.domain_api}/call-log/get"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "unique_ids": unique_ids
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
+        response.raise_for_status()
+        return process_call_history_response(response.json(), company)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch call history by IDs"))
+        frappe.throw(_("Could not fetch call history by unique IDs"))
+
