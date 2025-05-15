@@ -452,3 +452,92 @@ def handle_not_pickup_by_client_calls(response):
 
     frappe.db.commit()
 
+
+# Fetch Unique Clients Report
+
+@frappe.whitelist()
+def fetch_unique_clients_report():
+    # Fetch and validate parameters
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date and Company are required"))
+
+    try:
+        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    # Get API settings
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    # Prepare headers and payload
+    url = f"{settings.domain_api}/call-log/unique-clients"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "call_types": ["Incoming", "Outgoing"],
+        "emp_numbers": [],
+        "emp_tags": [],
+        "is_exclude_numbers": True,
+        "page_no": 1,
+        "page_size": 10000
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
+        response.raise_for_status()
+        return process_unique_clients_response(response.json(), company)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch unique clients report"))
+        frappe.throw(_("Could not fetch unique clients report"))
+
+
+def process_unique_clients_response(response_json, company):
+    clients = response_json.get("result", [])
+    inserted = 0
+
+    for client in clients:
+        if not (client.get("client_number") and client.get("client_country_code")):
+            continue
+
+        exists = frappe.db.exists("Callyzer Unique Client", {
+            "client_number": client["client_number"],
+            "client_country_code": client["client_country_code"],
+            "company": company
+        })
+        if exists:
+            continue
+
+        doc = frappe.new_doc("Callyzer Unique Client")
+        doc.client_name = client.get("client_name")
+        doc.client_number = client.get("client_number")
+        doc.client_country_code = client.get("client_country_code")
+        doc.total_calls = client.get("total_calls")
+        doc.total_incoming_calls = client.get("total_incoming_calls")
+        doc.total_outgoing_calls = client.get("total_outgoing_calls")
+        doc.company = company
+
+        # Optional: You can parse and store last call log info if needed
+        last_call_log = client.get("last_call_log", {})
+        if last_call_log:
+            doc.last_call_date = last_call_log.get("call_date")
+            doc.last_call_time = last_call_log.get("call_time")
+            doc.last_call_type = last_call_log.get("call_type")
+
+        doc.insert(ignore_permissions=True)
+        inserted += 1
+
+    return {"status": "success", "inserted": inserted}
+
