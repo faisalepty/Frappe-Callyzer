@@ -11,6 +11,78 @@ frappe.ui.form.on('Callyzer Settings', {
             });
         }, __('Action'));
 
+        frm.add_custom_button(__('Fetch Call By ID'), function() {
+            let d = new frappe.ui.Dialog({
+                title: 'Enter Call Log Unique ID',
+                fields: [
+                    {
+                        label: 'Unique ID',
+                        fieldname: 'unique_id',
+                        fieldtype: 'Data',
+                        reqd: true
+                    }
+                ],
+                primary_action_label: 'Send',
+                primary_action(values) {
+                    d.hide();
+
+                    frappe.call({
+                        method: "callyzer.api.fetch_call_history.fetch_call_history_by_ids",
+                        args: {
+                            unique_ids: [values.unique_id],
+                            company: frm.doc.name
+                        },
+                        callback: function(r) {
+                            if (r.message && r.message.status === "success") {
+                                frappe.msgprint(__("Fetched and inserted {0} call log(s)", [r.message.inserted]));
+                            } else {
+                                frappe.msgprint(__("Call fetch failed"));
+                            }
+                        }
+                    });
+                }
+            });
+
+            d.show();
+        }, __('Action'));
+
+        // Remove Call Recording Button
+        frm.add_custom_button(__('Remove Call Recording'), function() {
+            let d = new frappe.ui.Dialog({
+                title: 'Enter Call Log Unique ID(s)',
+                fields: [
+                    {
+                        label: 'Unique ID(s) (comma separated)',
+                        fieldname: 'unique_ids',
+                        fieldtype: 'Small Text',
+                        reqd: true
+                    }
+                ],
+                primary_action_label: 'Remove',
+                primary_action(values) {
+                    d.hide();
+                    let ids = values.unique_ids.split(',').map(id => id.trim()).filter(Boolean);
+
+                    frappe.call({
+                        method: "callyzer.api.call_recording.remove_call_recording",
+                        args: {
+                            unique_ids: ids,
+                            company: frm.doc.name
+                        },
+                        callback: function(r) {
+                            if (r.message.status === "success") {
+                                frappe.msgprint(__("Call recording(s) removed successfully."));
+                            } else {
+                                frappe.msgprint(__("Failed to remove recording: ") + r.message.message);
+                            }
+                        }
+                    });
+                }
+            });
+            d.show();
+        }, __('Action'));
+    
+
         frm.add_custom_button(__('Fetch Summary Report'), function() {
             const today = frappe.datetime.get_datetime_as_string(); 
             const one_month_ago = frappe.datetime.add_days(today, -1);

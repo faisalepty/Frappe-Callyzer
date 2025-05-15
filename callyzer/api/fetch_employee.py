@@ -104,7 +104,6 @@ def callyzer_employee_webhook():
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Webhook: Failed to process Callyzer Employee data")
         return {"status": "error", "message": "Processing failed"}
-    
 
 def parse_datetime(value):
     if not value:
@@ -142,3 +141,30 @@ def process_employee(item):
     
     doc.insert(ignore_permissions=True)
     return doc.name, True
+
+
+#Remove Call Recording
+@frappe.whitelist()
+def remove_call_recording(unique_ids: list[str], company: str = None):
+    if not unique_ids:
+        frappe.throw(_("Unique IDs are required"))
+
+    settings = frappe.get_doc("Callyzer Settings", company)
+    base_url = settings.api_url.rstrip("/")
+    api_key = settings.api_key
+
+    try:
+        res = requests.delete(
+            f"{base_url}/call-log/call-recording/remove",
+            headers={"api-key": api_key},
+            json={"unique_ids": unique_ids},
+            timeout=30
+        )
+        res.raise_for_status()
+        return {"status": "success", "message": res.json()}
+    except requests.RequestException as e:
+        frappe.log_error(f"Failed to remove call recording: {e}", "Callyzer Remove Call Recording")
+        return {"status": "error", "message": str(e)}
+
+
+

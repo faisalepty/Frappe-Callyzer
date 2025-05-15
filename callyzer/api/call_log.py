@@ -189,7 +189,6 @@ def fetch_employee_summary_report():
         response.raise_for_status()
         employees = employees = response.json().get("result", [])
 
-
         inserted = 0
         for emp in employees:
             if not frappe.db.exists("Callyzer Employee", {"employee_no": emp.get("emp_number")}):
@@ -226,3 +225,107 @@ def fetch_employee_summary_report():
     except Exception:
         frappe.log_error(frappe.get_traceback(), _("Failed to fetch Callyzer summary"))
         frappe.throw(_("Could not fetch employee summary report"))
+
+
+#Fetch analysis report
+@frappe.whitelist()
+def fetch_analysis_report():
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date, and Company are required"))
+
+    try:
+        call_from = int(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").timestamp())
+        call_to = int(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S").timestamp())
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    url = f"{settings.domain_api}/call-log/analysis"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
+        "is_exclude_numbers": True
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
+        response.raise_for_status()
+
+        result = response.json().get("result", {})
+        if not result:
+            frappe.throw(_("No analysis data found in response"))
+
+        doc = frappe.new_doc("Callyzer Analysis")
+        doc.start_date = start_date
+        doc.end_date = end_date
+        doc.company = company
+
+        # Average Duration
+        avg = result.get("average_duration", {})
+        doc.total_duration = avg.get("total_duration")
+        doc.avg_per_call = avg.get("per_call")
+        doc.total_calls = avg.get("total_calls")
+        doc.avg_per_day = avg.get("per_day")
+        doc.total_days = avg.get("total_days")
+        doc.avg_per_incoming = avg.get("per_incoming_call")
+        doc.total_incoming_calls = avg.get("total_incoming_calls")
+        doc.avg_per_outgoing = avg.get("per_outgoing_call")
+        doc.total_outgoing_calls = avg.get("total_outgoing_calls")
+
+        # Top Dialer
+        dialer = result.get("top_dialer", {})
+        doc.top_dialer_name = dialer.get("emp_name")
+        doc.top_dialer_number = dialer.get("emp_number")
+        doc.top_dialer_tags = ", ".join(dialer.get("emp_tags", []))
+        doc.top_dialer_outgoing_calls = dialer.get("total_outgoing_calls")
+
+        # Top Answered
+        answered = result.get("top_answered", {})
+        doc.top_answered_name = answered.get("emp_name")
+        doc.top_answered_number = answered.get("emp_number")
+        doc.top_answered_tags = ", ".join(answered.get("emp_tags", []))
+        doc.top_answered_incoming_calls = answered.get("total_incoming_calls")
+
+        # Top Caller
+        caller = result.get("top_caller", {})
+        doc.top_caller_name = caller.get("emp_name")
+        doc.top_caller_number = caller.get("emp_number")
+        doc.top_caller_tags = ", ".join(caller.get("emp_tags", []))
+        doc.top_caller_total_calls = caller.get("total_calls")
+
+        # Longest Duration
+        long_dur = result.get("longest_duration", {})
+        doc.longest_duration_name = long_dur.get("emp_name")
+        doc.longest_duration_number = long_dur.get("emp_number")
+        doc.longest_duration_tags = ", ".join(long_dur.get("emp_tags", []))
+        doc.longest_call_duration = long_dur.get("duration")
+
+        # Highest Duration
+        high_dur = result.get("highest_duration", {})
+        doc.highest_duration_name = high_dur.get("emp_name")
+        doc.highest_duration_number = high_dur.get("emp_number")
+        doc.highest_duration_tags = ", ".join(high_dur.get("emp_tags", []))
+        doc.highest_total_duration = high_dur.get("total_duration")
+
+        doc.insert(ignore_permissions=True)
+        return {"status": "success", "message": "Analysis data inserted"}
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch Callyzer analysis"))
+        frappe.throw(_("Could not fetch analysis report"))
+        
+        
+    
