@@ -541,3 +541,82 @@ def process_unique_clients_response(response_json, company):
 
     return {"status": "success", "inserted": inserted}
 
+
+# Fetch Hourly Analytics Report
+@frappe.whitelist()
+def fetch_hourly_analytics_report():
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date and Company are required"))
+
+    try:
+        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    url = f"{settings.domain_api}/call-log/hourly-analytics"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
+        "working_hour_from": "10:00",
+        "working_hour_to": "11:00",
+        "is_exclude_numbers": True
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
+        response.raise_for_status()
+        return process_hourly_analytics_response(response.json(), company, start_date)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch hourly analytics report"))
+        frappe.throw(_("Could not fetch hourly analytics report"))
+
+
+def process_hourly_analytics_response(response_json, company, call_date):
+    result = response_json.get("result", {})
+    if not result:
+        return {"status": "error", "message": "No result found in response"}
+
+    total_calls = result.get("total_calls", 0)
+    total_connected_calls = result.get("total_connected_calls", 0)
+    total_duration = result.get("total_duration", 0)
+    time_slots = result.get("time_slots", [])
+
+    inserted = 0
+    for slot in time_slots:
+        doc = frappe.new_doc("Hourly Analytics")
+        doc.company = company
+        doc.call_date = call_date[:10]  # Extract date part
+        doc.hour = slot.get("hour")
+        doc.call_count = slot.get("call_count", 0)
+        doc.connected_call_count = slot.get("connected_call_count", 0)
+        doc.duration = slot.get("duration", 0)
+        doc.total_calls = total_calls
+        doc.total_connected_calls = total_connected_calls
+        doc.total_duration = total_duration
+        doc.insert(ignore_permissions=True)
+        inserted += 1
+
+    return {
+        "status": "success",
+        "inserted": inserted,
+        "total_slots": len(time_slots),
+        "total_calls": total_calls,
+        "total_connected_calls": total_connected_calls
+    }
+
