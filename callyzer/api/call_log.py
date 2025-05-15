@@ -620,3 +620,74 @@ def process_hourly_analytics_response(response_json, company, call_date):
         "total_connected_calls": total_connected_calls
     }
 
+
+#Fetch Day-wise Analytics Report
+@frappe.whitelist()
+def fetch_daywise_analytics_report():
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date, and Company are required"))
+
+    try:
+        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    url = f"{settings.domain_api}/call-log/daywise-analytics"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "emp_numbers": [],
+        "working_hour_from": "00:00",
+        "working_hour_to": "20:59",
+        "is_exclude_numbers": True
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
+        response.raise_for_status()
+        return process_daywise_analytics_response(response.json(), company)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch day-wise analytics report"))
+        frappe.throw(_("Could not fetch day-wise analytics report"))
+
+def process_daywise_analytics_response(response_json, company):
+    result = response_json.get("result", [])
+    if not result:
+        return {"status": "error", "message": "No day-wise analytics found in response"}
+
+    inserted = 0
+    for row in result:
+        call_date = row.get("date")
+        if not call_date:
+            continue
+
+        doc = frappe.new_doc("Daywise Analytics")
+        doc.company = company
+        doc.call_date = call_date
+        doc.total_calls = row.get("total_calls", 0)
+        doc.total_connected_calls = row.get("total_connected_calls", 0)
+        doc.total_duration = row.get("total_duration", 0)
+        doc.insert(ignore_permissions=True)
+        inserted += 1
+
+    return {
+        "status": "success",
+        "inserted": inserted,
+        "days_processed": len(result)
+    }
+
