@@ -691,3 +691,99 @@ def process_daywise_analytics_response(response_json, company):
         "days_processed": len(result)
     }
 
+
+##Fetch Call History Report
+@frappe.whitelist()
+def fetch_call_history_report():
+    start_date = frappe.form_dict.get("start_date")
+    end_date = frappe.form_dict.get("end_date")
+    company = frappe.form_dict.get("company")
+
+    if not (start_date and end_date and company):
+        frappe.throw(_("Start Date, End Date, and Company are required"))
+
+    try:
+        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
+    except Exception:
+        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+
+    settings = get_callyzer_settings(company)
+    if not settings:
+        frappe.throw(_("Callyzer settings not found for the company"))
+
+    url = f"{settings.domain_api}/call-log/history"
+    headers = {
+        "Authorization": f"Bearer {settings.api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "call_from": call_from,
+        "call_to": call_to,
+        "emp_numbers": [],
+        "is_exclude_numbers": True,
+        "page_no": 1,
+        "page_size": 10000
+    }
+
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
+        response.raise_for_status()
+        return process_call_history_response(response.json(), company)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), _("Failed to fetch call history report"))
+        frappe.throw(_("Could not fetch call history report"))
+
+def process_call_history_response(response_json, company):
+    call_logs = response_json.get("result", [])
+    if not call_logs:
+        return {"status": "error", "message": "No call history data found in response"}
+
+    inserted = 0
+    for call in call_logs:
+        # Skip if ID or client number is missing
+        if not (call.get("id") and call.get("client_number")):
+            continue
+
+        exists = frappe.db.exists("Call History Log", {
+            "external_id": call["id"],
+            "client_number": call["client_number"],
+            "company": company
+        })
+        if exists:
+            continue
+
+        doc = frappe.new_doc("Call History Log")
+        doc.external_id = call.get("id")
+        doc.emp_name = call.get("emp_name")
+        doc.emp_code = call.get("emp_code")
+        doc.emp_number = call.get("emp_number")
+        doc.emp_country_code = call.get("emp_country_code")
+        doc.emp_tags = ", ".join(call.get("emp_tags") or [])
+        doc.client_name = call.get("client_name")
+        doc.client_number = call.get("client_number")
+        doc.client_country_code = call.get("client_country_code")
+        doc.duration = call.get("duration")
+        doc.call_type = call.get("call_type")
+        doc.call_date = call.get("call_date")
+        doc.call_time = call.get("call_time")
+        doc.note = call.get("note")
+        doc.call_recording_url = call.get("call_recording_url")
+        doc.crm_status = call.get("crm_status")
+        doc.reminder_date = call.get("reminder_date")
+        doc.reminder_time = call.get("reminder_time")
+        doc.synced_at = call.get("synced_at")
+        doc.modified_at = call.get("modified_at")
+        doc.lead_id = call.get("lead_id")
+        doc.company = company
+
+        doc.insert(ignore_permissions=True)
+        inserted += 1
+
+    return {
+        "status": "success",
+        "inserted": inserted,
+        "records_fetched": len(call_logs)
+    }
