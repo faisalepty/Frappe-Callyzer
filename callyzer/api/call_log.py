@@ -22,7 +22,7 @@ def fetch_summary_report():
         frappe.throw(_("Callyzer settings not found for the company"))
 
     url = f"{settings.domain_api}/call-log/summary"
-    token = settings.api_key  # assuming this is the Bearer token
+    token = settings.api_key
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -386,12 +386,11 @@ def handle_never_attended_calls(response):
                 doc.modified_at = log.get("modified_at")
                 doc.insert(ignore_permissions=True)
 
-    frappe.db.commit()
-
 
 
 #Fetch Not Pickup By Client
 def fetch_not_pickup_by_client_calls():
+    
     url = "https://your.callyzer.instance/call-log/not-pickup-by-client"
 
     payload = {
@@ -454,7 +453,6 @@ def handle_not_pickup_by_client_calls(response):
 
 
 # Fetch Unique Clients Report
-
 @frappe.whitelist()
 def fetch_unique_clients_report():
     # Fetch and validate parameters
@@ -462,20 +460,13 @@ def fetch_unique_clients_report():
     end_date = frappe.form_dict.get("end_date")
     company = frappe.form_dict.get("company")
 
-    if not (start_date and end_date and company):
-        frappe.throw(_("Start Date, End Date and Company are required"))
-
-    try:
-        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
-        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
-    except Exception:
-        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+  
+    call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+    call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
 
     # Get API settings
     settings = get_callyzer_settings(company)
-    if not settings:
-        frappe.throw(_("Callyzer settings not found for the company"))
-
+ 
     # Prepare headers and payload
     url = f"{settings.domain_api}/call-log/unique-clients"
     headers = {
@@ -496,7 +487,6 @@ def fetch_unique_clients_report():
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
-        response.raise_for_status()
         return process_unique_clients_response(response.json(), company)
 
     except Exception:
@@ -549,14 +539,8 @@ def fetch_hourly_analytics_report():
     end_date = frappe.form_dict.get("end_date")
     company = frappe.form_dict.get("company")
 
-    if not (start_date and end_date and company):
-        frappe.throw(_("Start Date, End Date and Company are required"))
-
-    try:
-        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
-        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
-    except Exception:
-        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+    call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+    call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
 
     settings = get_callyzer_settings(company)
     if not settings:
@@ -579,7 +563,6 @@ def fetch_hourly_analytics_report():
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=20)
-        response.raise_for_status()
         return process_hourly_analytics_response(response.json(), company, start_date)
 
     except Exception:
@@ -623,24 +606,16 @@ def process_hourly_analytics_response(response_json, company, call_date):
 
 #Fetch Day-wise Analytics Report
 @frappe.whitelist()
-def fetch_daywise_analytics_report():
+def fetch_day_wise_analytics_report():
     start_date = frappe.form_dict.get("start_date")
     end_date = frappe.form_dict.get("end_date")
     company = frappe.form_dict.get("company")
 
-    if not (start_date and end_date and company):
-        frappe.throw(_("Start Date, End Date, and Company are required"))
-
-    try:
-        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
-        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
-    except Exception:
-        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+    call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+    call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
 
     settings = get_callyzer_settings(company)
-    if not settings:
-        frappe.throw(_("Callyzer settings not found for the company"))
-
+  
     url = f"{settings.domain_api}/call-log/daywise-analytics"
     headers = {
         "Authorization": f"Bearer {settings.api_key}",
@@ -754,6 +729,8 @@ def process_call_history_response(response_json, company):
         })
         if exists:
             continue
+        if not frappe.db.exists("Callyzer Employee", {"employee_no": call.get("emp_number")}):
+                process_employee(call)
 
         doc = frappe.new_doc("Call History Log")
         doc.external_id = call.get("id")
@@ -845,3 +822,5 @@ def remove_call_recording(unique_ids: list[str], company: str = None):
     except requests.RequestException as e:
         frappe.log_error(f"Failed to remove call recording: {e}", "Callyzer Remove Call Recording")
         return {"status": "error", "message": str(e)}
+    
+    
