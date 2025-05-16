@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-16 14:46:11.210973",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "external_id",
+  "lead_id",
+  "employer_name",
+  "column_break_qdck",
+  "employer_code",
+  "employer_number",
+  "employer_country_code",
+  "employer_tags",
+  "section_break_xehp",
+  "client_name",
+  "client_number",
+  "column_break_tvyu",
+  "client_country_code",
+  "section_break_zsca",
+  "duration",
+  "call_date",
+  "call_time",
+  "column_break_vdwm",
+  "call_type",
+  "call_recording_url",
+  "section_break_xsmo",
+  "note",
+  "reminder_date",
+  "reminder_time",
+  "column_break_royv",
+  "crm_status",
+  "synced_at",
+  "modified_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company"
+  },
+  {
+   "fieldname": "external_id",
+   "fieldtype": "Data",
+   "label": "External Id"
+  },
+  {
+   "fieldname": "lead_id",
+   "fieldtype": "Data",
+   "label": "Lead Id"
+  },
+  {
+   "fieldname": "employer_name",
+   "fieldtype": "Data",
+   "label": "Employer Name"
+  },
+  {
+   "fieldname": "column_break_qdck",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employer_code",
+   "fieldtype": "Data",
+   "label": "Employer Code"
+  },
+  {
+   "fieldname": "employer_number",
+   "fieldtype": "Data",
+   "label": "Employer Number"
+  },
+  {
+   "fieldname": "employer_country_code",
+   "fieldtype": "Data",
+   "label": "Employer Country Code"
+  },
+  {
+   "fieldname": "employer_tags",
+   "fieldtype": "Data",
+   "label": "Employer Tags"
+  },
+  {
+   "fieldname": "section_break_xehp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "label": "Client Name"
+  },
+  {
+   "fieldname": "client_number",
+   "fieldtype": "Data",
+   "label": "Client Number"
+  },
+  {
+   "fieldname": "column_break_tvyu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "client_country_code",
+   "fieldtype": "Data",
+   "label": "Client Country Code"
+  },
+  {
+   "fieldname": "section_break_zsca",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "duration",
+   "fieldtype": "Int",
+   "label": "Duration"
+  },
+  {
+   "fieldname": "call_date",
+   "fieldtype": "Data",
+   "label": "Call Date"
+  },
+  {
+   "fieldname": "call_time",
+   "fieldtype": "Data",
+   "label": "Call Time"
+  },
+  {
+   "fieldname": "column_break_vdwm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "call_type",
+   "fieldtype": "Data",
+   "label": "Call Type"
+  },
+  {
+   "fieldname": "call_recording_url",
+   "fieldtype": "Data",
+   "label": "Call Recording Url"
+  },
+  {
+   "fieldname": "section_break_xsmo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Data",
+   "label": "Note"
+  },
+  {
+   "fieldname": "reminder_date",
+   "fieldtype": "Data",
+   "label": "Reminder Date"
+  },
+  {
+   "fieldname": "reminder_time",
+   "fieldtype": "Data",
+   "label": "Reminder Time"
+  },
+  {
+   "fieldname": "column_break_royv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crm_status",
+   "fieldtype": "Data",
+   "label": "Crm Status"
+  },
+  {
+   "fieldname": "synced_at",
+   "fieldtype": "Data",
+   "label": "Synced At"
+  },
+  {
+   "fieldname": "modified_at",
+   "fieldtype": "Data",
+   "label": "Modified At"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-16 15:39:56.704918",
+ "modified_by": "jojomadready@gmail.com",
+ "module": "Callyzer",
+ "name": "Call History Log",
+ "owner": "jojomadready@gmail.com",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
