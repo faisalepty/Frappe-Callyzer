@@ -1,0 +1,116 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"p0Q_yYZNUP\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px; letter-spacing: 0.18px;\\\"><b>Shortcut</b></span>\",\"col\":12}},{\"id\":\"VNn9yQ5ou8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Callyzer Settings\",\"col\":5}},{\"id\":\"LZfuvoZRCY\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Callyzer Employee\",\"col\":4}},{\"id\":\"PJ9ec-7UcS\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"id\":\"ZdZOQC8ALY\",\"type\":\"spacer\",\"data\":{\"col\":12}}]",
+ "creation": "2025-05-17 10:04:40.693662",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "read-status",
+ "idx": 0,
+ "indicator_color": "blue",
+ "is_hidden": 0,
+ "label": "Callyzer",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Daywise Analyicts",
+   "link_count": 0,
+   "link_to": "Daywise Analyicts",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Hourly Analytics",
+   "link_count": 0,
+   "link_to": "Hourly Analytics",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Callyzer Call Log",
+   "link_count": 0,
+   "link_to": "Callyzer Call Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Callyzer Employee Summary",
+   "link_count": 0,
+   "link_to": "Callyzer Employee Summary",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Callyzer Unique Client",
+   "link_count": 0,
+   "link_to": "Callyzer Unique Client",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Call History Log",
+   "link_count": 0,
+   "link_to": "Call History Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2025-05-17 10:10:53.033703",
+ "modified_by": "Administrator",
+ "module": "Callyzer",
+ "name": "Callyzer",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 44.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Callyzer Settings",
+   "link_to": "Callyzer Settings",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Callyzer Employee",
+   "link_to": "Callyzer Employee",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Callyzer"
+}

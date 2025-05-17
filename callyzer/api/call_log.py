@@ -674,14 +674,11 @@ def fetch_call_history_report():
     end_date = frappe.form_dict.get("end_date")
     company = frappe.form_dict.get("company")
 
-    if not (start_date and end_date and company):
-        frappe.throw(_("Start Date, End Date, and Company are required"))
+    call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
+    call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
 
-    try:
-        call_from = format_time_timestamp_(datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S"))
-        call_to = format_time_timestamp_(datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S"))
-    except Exception:
-        frappe.throw(_("Invalid date format. Use 'YYYY-MM-DD HH:MM:SS'"))
+    if call_from >= call_to:
+        frappe.throw(_("Start date must be before end date"))
 
     settings = get_callyzer_settings(company)
     if not settings:
@@ -696,17 +693,20 @@ def fetch_call_history_report():
     payload = {
         "call_from": call_from,
         "call_to": call_to,
+        "call_types": ["Missed", "Rejected", "Incoming", "Outgoing"],
         "emp_numbers": [],
         "is_exclude_numbers": True,
         "page_no": 1,
-        "page_size": 10000
+        "page_size": 100
     }
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
-        response.raise_for_status()
-        return process_call_history_response(response.json(), company)
+        if response.status_code != 200:
+            frappe.log_error(response.text, "Callyzer History API Error")
+            frappe.throw(_("Call history fetch failed: ") + response.text)
 
+        return process_call_history_response(response.json(), company)
     except Exception:
         frappe.log_error(frappe.get_traceback(), _("Failed to fetch call history report"))
         frappe.throw(_("Could not fetch call history report"))
